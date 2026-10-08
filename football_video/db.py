@@ -122,3 +122,21 @@ def get_event_with_video(event_id: int):
         raise VideoError(f"Event {event_id} not found, or its match has no video linked. "
                          "Use 'video link' first.")
     return row
+
+
+def get_comp_events(match_id: int, player_id: int, types: list[str] | None):
+    """Events for one player in one match, with the video and match info needed for a comp."""
+    sql = ("SELECT e.id, e.event_type, e.period, e.match_clock, p.name AS player, "
+           "m.home_team, m.away_team, v.path, v.first_half_start, v.second_half_start "
+           "FROM events e "
+           "JOIN players p ON p.id = e.player_id "
+           "JOIN matches m ON m.id = e.match_id "
+           "JOIN video_files v ON v.id = (SELECT MAX(id) FROM video_files WHERE match_id = e.match_id) "
+           "WHERE e.match_id = ? AND e.player_id = ?")
+    params: list = [match_id, player_id]
+    if types:
+        sql += " AND LOWER(e.event_type) IN (%s)" % ",".join("?" * len(types))
+        params += [t.lower() for t in types]
+    sql += " ORDER BY e.period, e.match_clock"
+    with connect() as conn:
+        return conn.execute(sql, params).fetchall()

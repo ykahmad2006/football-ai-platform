@@ -23,6 +23,11 @@ Milestone 1: football video foundation. Python + FFmpeg, no paid tools.
     python -m football_video event list --match 1
     python -m football_video event clip 1
 
+## Player comp (V2)
+    python -m football_video comp --match 1 --player 1 --types Goal,Shot --format 16:9,9:16
+
+Formats: 16:9, 9:16, 1:1, 4:5. Overlapping clips are merged. Labels show player, event, match clock and teams.
+
 ## Tests
     python -m unittest discover tests
 

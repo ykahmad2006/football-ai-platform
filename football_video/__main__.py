@@ -4,6 +4,7 @@
   python -m football_video thumbnail match.mp4 --at 00:10:00
   python -m football_video frames match.mp4 --start 00:10:00 --end 00:10:10 --fps 2
   python -m football_video whatsapp clip.mp4
+  python -m football_video comp --match 1 --player 1 --types Goal,Shot --format 16:9,9:16
   python -m football_video gif clip.mp4
 """
 import argparse
@@ -11,6 +12,7 @@ import logging
 import sys
 
 from .clip import extract_frames, make_clip, make_thumbnail
+from .comp import make_comp
 from . import dbcli
 from .export import make_gif, make_whatsapp
 from .probe import VideoError, probe
@@ -46,6 +48,15 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--fps", type=int, default=12)
     g.add_argument("--width", type=int, default=480)
     g.add_argument("--max-seconds", type=float, default=15.0)
+
+    k = sub.add_parser("comp", help="Generate a player compilation")
+    k.add_argument("--match", type=int, required=True)
+    k.add_argument("--player", type=int, required=True)
+    k.add_argument("--types", help="Comma list, e.g. Goal,Shot. Default: all events")
+    k.add_argument("--pre", type=float, default=8, help="Seconds before each event")
+    k.add_argument("--post", type=float, default=6, help="Seconds after each event")
+    k.add_argument("--format", default="16:9", help="16:9, 9:16, 1:1, 4:5 (comma list allowed)")
+    k.add_argument("--name", help="Output file name without extension")
     dbcli.register(sub)
     return parser
 
@@ -70,6 +81,10 @@ def main() -> int:
             extract_frames(args.video, args.start, args.end, args.fps)
         elif args.command == "whatsapp":
             make_whatsapp(args.video, args.crf)
+        elif args.command == "comp":
+            types = [t.strip() for t in args.types.split(",")] if args.types else None
+            for fmt in [f.strip() for f in args.format.split(",")]:
+                make_comp(args.match, args.player, types, args.pre, args.post, fmt, args.name)
         elif args.command in dbcli.COMMANDS:
             dbcli.handle(args)
         elif args.command == "gif":

@@ -1,6 +1,7 @@
 import unittest
 
 from football_video.clip import parse_timestamp
+from football_video.comp import clock_label, merge_windows
 from football_video.db import event_video_time
 from football_video.probe import VideoError
 
@@ -26,6 +27,20 @@ class EventTimeTests(unittest.TestCase):
     def test_second_half_before_45(self):
         with self.assertRaises(VideoError):
             event_video_time(30 * 60, 2, 0, 0)
+
+
+class CompTests(unittest.TestCase):
+    def test_overlapping_windows_merge(self):
+        ws = [{"start": 10, "end": 20, "types": ["Goal"], "clock": 15},
+              {"start": 18, "end": 30, "types": ["Shot"], "clock": 24},
+              {"start": 50, "end": 60, "types": ["Pass"], "clock": 55}]
+        out = merge_windows(ws)
+        self.assertEqual(len(out), 2)
+        self.assertEqual((out[0]["start"], out[0]["end"]), (10, 30))
+        self.assertEqual(out[0]["types"], ["Goal", "Shot"])
+
+    def test_clock_label(self):
+        self.assertEqual(clock_label(75 * 60 + 21), "75:21")
 
 
 if __name__ == "__main__":
