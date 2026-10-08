@@ -1,0 +1,1 @@
+"""Football video processing foundation."""

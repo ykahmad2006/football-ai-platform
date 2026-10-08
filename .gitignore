@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+data/raw/
+data/*.db
+outputs/
+*.mp4
+*.mkv
+*.mov
+*.webm
+.env
